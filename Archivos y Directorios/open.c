@@ -96,14 +96,16 @@
 
 #include <fcntl.h>														// En este se encuentra la declaración de la función open()
 
+#include <stdlib.h>
+
 int32_t main(int32_t argc, char** argv){								// El programa toma como argumentos los archivos a copiar
 	const char* mensaje = "El descriptor de archivo no se pudo abrir.";
 	const char* archivo_from = argv[1];									
 	const char* archivo_to = argv[2];
 	
-	int32_t desc_arch_from = open(archivo_from, O_WRONLY);
+	int32_t desc_arch_from = open(archivo_from, O_RDONLY);
 	
-	int32_t desc_arch_to = open(archivo_to, O_WRONLY | O_CREAT);
+	int32_t desc_arch_to = open(archivo_to, O_RDWR | O_CREAT);
 	
 	if (argc <= 1){						
 		printf("\nNo se especificaron archivos.\n");
@@ -112,7 +114,7 @@ int32_t main(int32_t argc, char** argv){								// El programa toma como argumen
 		return 1;
 	}
 	
-	if (desc_arch_from < 0){					// Verificamos que los descriptores de archivo se han abierto de manera satisfactoria
+	if (desc_arch_from < 0){											// Verificamos que los descriptores de archivo se han abierto de manera satisfactoria
 		printf(mensaje);
 		printf("\n#from: %i\n", desc_arch_from);
 		printf("\n#to: %i\n", desc_arch_to);
@@ -128,15 +130,18 @@ int32_t main(int32_t argc, char** argv){								// El programa toma como argumen
 		return 1;
 	}
 	
-	struct stat* stat_buff = NULL;										//Declaramos nuestro apuntador a struct stat.
+	struct stat stat_buff;												//Declaramos nuestro apuntador a struct stat.
 	char* contenido_archivo = NULL;										// Declaramos nuestro buffer del archivo.
 	
-	fstat(desc_arch_from, stat_buff);									//Obtenemos la información.
+	fstat(desc_arch_from, &stat_buff);									//Obtenemos la información.
+	contenido_archivo = (char*) malloc(sizeof(char)*stat_buff.st_size);
 	
-	read(desc_arch_from, contenido_archivo, stat_buff->st_size);		// Leemos la información contenida en el descriptor de archivo y la almacenamos en nuestro buffer.
-	write(desc_arch_to, contenido_archivo, stat_buff->st_size);			// Va a escribir st_size bytes (contenido de archivo)
+	printf("\n\t\t\tstat_buff->st_size: %li\n", stat_buff.st_size);
 	
-	printf("Se han copiado los ficheros.");
+	read(desc_arch_from, contenido_archivo, stat_buff.st_size);			// Leemos la información contenida en el descriptor de archivo y la almacenamos en nuestro buffer.
+	write(desc_arch_to, contenido_archivo, stat_buff.st_size);			// Va a escribir st_size bytes (contenido de archivo)
+	
+	printf("\t\t\t\t\nSe han copiado los ficheros.\n");
 	
 	
 	close(desc_arch_from);												//Cerramos los flujos.
@@ -144,4 +149,8 @@ int32_t main(int32_t argc, char** argv){								// El programa toma como argumen
 	
 	return 0;
 }
+
+/**
+ * Para información adicional, consultar http://codewiki.wikidot.com/system-calls
+ **/
 
