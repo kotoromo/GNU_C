@@ -63,15 +63,15 @@
 // Programa que emula el comando ls.
 
 int32_t main(int32_t argc, char** argv){
-	struct dirent *dir_ptr = NULL;
-	DIR *dp = NULL;
-	char *buf = NULL;
+	struct dirent *dir_ptr = NULL; // Tenemos nuestro apuntador a una estructura dirent. Para inicializarlo, le asignamos un valor NULL.
+	DIR *dp = NULL; // Tenemos nuestro apuntador a un flujo de directorio.
+	char *buf = NULL; // Buffer de caracteres.
 
-	buf = malloc(sizeof(char)*BUFF_SIZE);
-	char* nombre_dir = getcwd(buf, BUFF_SIZE); // El directorio home del usuario que ejecuta este programa.
+	buf = malloc(sizeof(char)*BUFF_SIZE); // Asignamos a nuestro buffer de caracteres BUFF_SIZE bytes de memoria.
+	char* nombre_dir = getcwd(buf, BUFF_SIZE); // El nombre del directorio va a ser nuestro directorio actual de trabajo.
 
 	if (argc > 1){
-		nombre_dir = argv[1];
+		nombre_dir = argv[1]; // Si se especifica un directorio por medio de la linea de comandos, utilizamos ese en lugar de nuestro CWD.
 	}
 
 	/* DIR *opendir(const char *name); */
@@ -84,13 +84,20 @@ int32_t main(int32_t argc, char** argv){
 	}
 
 	/* struct dirent *readdir(DIR *dirp); */
+	/* La lógica para este recorrido es la siguiente:
+		Recordemos que cuando llamamos a readdir sobre un flujo dp, este va a llamar a la SIGUIENTE entrada en ese flujo.
+		Funciona de manera análoga a una lista ligada, por lo que, si volvieramos a llamar a readdir sobre ese mismo flujo, otra vez
+		readdir nos devolveria un puntero a un struct dirent pero este seria el SIGUIENTE al de la anterior vez que hicimos la llamada a la función.
+
+		De esta manera entonces, podemos recorrer cada uno de los elementos dentro del flujo de directorio.
+	*/
 	while ((dir_ptr = readdir(dp)) != NULL){
 		unsigned char type = dir_ptr->d_type;
 		char* name = dir_ptr->d_name;
 
-		if (type == DT_DIR)
+		if (type == DT_DIR) // Si el tipo de archivo es un directorio...
 			printf(BLU"*%s\n"RESET, name);
-		else if(type == DT_REG)
+		else if(type == DT_REG) // Si el tipo de archivo es un fichero regular...
 			//printf(GRN"*%s\n"RESET, name);
 			printf("*%s\n", name);
 
