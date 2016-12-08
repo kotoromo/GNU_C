@@ -48,11 +48,62 @@
 #include <dirent.h>
 #include <unistd.h> // Nos provee de funciones que nos permite el manejo de directorios en un entorno POSIX.
 #include <stdio.h>
+#include <string.h>
+#define BUFF_SIZE 255
+
+#define RED   "\x1B[31m"
+#define GRN   "\x1B[32m"
+#define YEL   "\x1B[33m"
+#define BLU   "\x1B[34m"
+#define MAG   "\x1B[35m"
+#define CYN   "\x1B[36m"
+#define WHT   "\x1B[37m"
+#define RESET "\x1B[0m"
 
 // Programa que emula el comando ls.
 
 int32_t main(int32_t argc, char** argv){
-	
+	struct dirent *dir_ptr = NULL;
+	DIR *dp = NULL;
+	char *buf = NULL;
+
+	buf = malloc(sizeof(char)*BUFF_SIZE);
+	char* nombre_dir = getcwd(buf, BUFF_SIZE); // El directorio home del usuario que ejecuta este programa.
+
+	if (argc > 1){
+		nombre_dir = argv[1];
+	}
+
+	/* DIR *opendir(const char *name); */
+	dp = opendir(nombre_dir);
+
+	if(dp == NULL){
+		printf("\npathname invalido.\n");
+		printf("pathname == NULL: %i\n", nombre_dir == NULL);
+		return 1;
+	}
+
+	/* struct dirent *readdir(DIR *dirp); */
+	while ((dir_ptr = readdir(dp)) != NULL){
+		unsigned char type = dir_ptr->d_type;
+		char* name = dir_ptr->d_name;
+
+		if (type == DT_DIR)
+			printf(BLU"*%s\n"RESET, name);
+		else if(type == DT_REG)
+			//printf(GRN"*%s\n"RESET, name);
+			printf("*%s\n", name);
+
+	}
+
+	closedir(dp);
+	free(buf);
+
+	return 0;
 }
 
-/* Checar https://users.cs.cf.ac.uk/Dave.Marshall/C/node20.html */
+/* Para más información:
+	- http://www.thegeekstuff.com/2012/06/c-directory/
+	- https://users.cs.cf.ac.uk/Dave.Marshall/C/node20.html 
+	- https://www.gnu.org/software/libc/manual/html_node/Directory-Entries.html
+*/
