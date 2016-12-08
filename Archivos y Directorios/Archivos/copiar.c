@@ -86,20 +86,15 @@
 
 #include <sys/types.h>
 
-#include <sys/stat.h>
-
+#include <sys/stat.h>													// Las cabeceras sys/stat.h y sys/types.h son necesarias para algunas distribuciones de GNU/Linux
 #include <stdio.h>
-
 #include <stdint.h>
-
 #include <unistd.h> 													// En este se encuentra la declaración de las funciones close(), write() y la estructura struct stat asi como la función fstat()
-
 #include <fcntl.h>														// En este se encuentra la declaración de la función open()
-
 #include <stdlib.h>
 
 int32_t main(int32_t argc, char** argv){								// El programa toma como argumentos los archivos a copiar
-	const char* mensaje = "El descriptor de archivo no se pudo abrir.";
+	
 	const char* archivo_from = argv[1];									
 	const char* archivo_to = argv[2];
 	
@@ -114,19 +109,11 @@ int32_t main(int32_t argc, char** argv){								// El programa toma como argumen
 		return 1;
 	}
 	
-	if (desc_arch_from < 0){											// Verificamos que los descriptores de archivo se han abierto de manera satisfactoria
+	if ( (desc_arch_to < 0) || (desc_arch_from < 0) ){					// Verificamos que los descriptores de archivo se han abierto de manera satisfactoria
+		const char* mensaje = 
+		"El descriptor de archivo no se pudo abrir.";
+
 		printf(mensaje);
-		printf("\n#from: %i\n", desc_arch_from);
-		printf("\n#to: %i\n", desc_arch_to);
-		return 1;
-	}
-	
-	if (desc_arch_to < 0){
-		printf(mensaje);
-		printf("\n#from: %i\n", desc_arch_from);
-		printf("\n#to: %i\n", desc_arch_to);
-		
-		printf("\n\t\t\targv[2]: %s\n", argv[2]);
 		return 1;
 	}
 	
@@ -136,16 +123,12 @@ int32_t main(int32_t argc, char** argv){								// El programa toma como argumen
 	fstat(desc_arch_from, &stat_buff);									//Obtenemos la información.
 	contenido_archivo = (char*) malloc(sizeof(char)*stat_buff.st_size);
 	
-	printf("\n\t\t\tstat_buff->st_size: %li\n", stat_buff.st_size);
-	
 	read(desc_arch_from, contenido_archivo, stat_buff.st_size);			// Leemos la información contenida en el descriptor de archivo y la almacenamos en nuestro buffer.
 	write(desc_arch_to, contenido_archivo, stat_buff.st_size);			// Va a escribir st_size bytes (contenido de archivo)
-	
-	printf("\t\t\t\t\nSe han copiado los ficheros.\n");
-	
-	
+		
 	close(desc_arch_from);												//Cerramos los flujos.
 	close(desc_arch_to);
+	free(contenido_archivo);											//Liberamos el espacio reservado para el contenido.
 	
 	return 0;
 }
